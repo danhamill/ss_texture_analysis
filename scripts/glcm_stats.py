@@ -8,7 +8,6 @@ from rasterstats import zonal_stats
 import ogr
 import pandas as pd
 import os
-import numpy as np
 import platform
 
 
@@ -63,12 +62,38 @@ def agg_distributions(stats,in_shp,metric):
 
 
 def glcm_summary_stats(k,v,raster,variable,a):
+    '''
+    Function calculate GLCM summary stats for an individual scan
+    Rerutns: Output file name
+    '''
     oName = out_root + os.sep + k +'_' + variable + "_zonalstats" + ".csv" 
     glcm_stats = zonal_stats(v, raster, stats=['min','mean','max','median','std','count','percentile_25','percentile_50','percentile_75'])
     glcm_df = pd.DataFrame(glcm_stats)
     glcm_df['substrate'] = a
     glcm_df.to_csv(oName,sep=',',index=False)
-        
+    return oName
+
+def merge_glcm_distributions(dist_files, oName):
+    '''
+    Function to merge GLCM distributions for all of the scans
+    '''
+    df1 = pd.read_csv(dist_files[0],sep=',')  
+    df2 = pd.read_csv(dist_files[1],sep=',')  
+    df3 = pd.read_csv(dist_files[2],sep=',')
+    merge_dist = pd.concat([df1,pd.concat([df2,df3])])
+    merge_dist = merge_dist[(merge_dist['Entropy']>2.5) & (merge_dist['Variance']<12)&(merge_dist['Entropy']<4.6) ]
+    merge_dist.to_csv(oName,sep=',',index=False)
+    
+def merge_summary_stats(files, oName):
+    '''
+    Funtion to merge threee csv files contaning the GLCM summary statistics
+    '''
+    df1 = pd.read_csv(files[0],sep=',')  
+    df2 = pd.read_csv(files[1],sep=',')  
+    df3 = pd.read_csv(files[2],sep=',')
+    pd.concat([df1,df2,df3]).to_csv(oName,sep=',',index=False)
+    
+    
 if __name__ == '__main__':
     
     
@@ -77,12 +102,16 @@ if __name__ == '__main__':
         clone_root = r'c:\workspace\ss_texture_analysis'
         out_root = clone_root + os.sep + "glcm_stats"
     
-    #input shapefiles
+    #input shapefiles dictionary
     shp_dict = {'R01346':clone_root + os.sep + 'shapefiles' + os.sep +'R01346.shp',
                 'R01765':clone_root + os.sep + 'shapefiles' + os.sep +'R01765.shp',
                 'R01767':clone_root + os.sep + 'shapefiles' + os.sep +'R01767.shp'}  
-    fnames = []
-    for (k,v) in shp_dict.items()[0:1]:
+    
+    #Initalize lists for individul scan files
+    ent_files, hom_files, var_files, dist_files = [],[],[],[]
+    
+    #Get distribtuions and summary statistics for each scan
+    for (k,v) in shp_dict.items():
         
         #Path to textur feature rasters
         ent_file = clone_root + os.sep + 'glcm_rasters' + os.sep + k + '_entropy_resampled.tif'
@@ -109,7 +138,7 @@ if __name__ == '__main__':
         r_df = pd.concat([r_ent,pd.concat([r_var,r_homo],axis=1)],axis=1)
         del s_ent, g_ent, r_ent, s_var, g_var, r_var, s_homo, g_homo, r_homo
         
-        #Assign numberic sediment type code
+        #Assign numberic code for each sedimenbt type
         s_df['sedclass'] = 1
         g_df['sedclass'] = 2
         r_df['sedclass'] = 3
@@ -117,31 +146,29 @@ if __name__ == '__main__':
         #Write distibutions to file
         agg_dist = pd.concat([s_df,pd.concat([g_df,r_df])])
         oName = out_root + os.sep + k + "_aggregraded_distributions.csv"
-        fnames.append(oName)
+        dist_files.append(oName)
         agg_dist.to_csv(oName,sep=',',index=False)
         
         ########################################################################################
         ####            Calculate Summary Statistics for LSQ
         ########################################################################################
         
-        glcm_summary_stats(k,v,ent_file,'ent',a)
-        glcm_summary_stats(k,v,hom_file,'hom',a)
-        glcm_summary_stats(k,v,var_file,'var',a)
-        
-        #######NEed to come up with way to get file names for future merge
-
-        
-    del k, v, oName, agg_dist, s_df, g_df, r_df,a
-
-    df1 = pd.read_csv(fnames[0],sep=',')  
-    df2 = pd.read_csv(fnames[1],sep=',')  
-    df3 = pd.read_csv(fnames[2],sep=',')
+        ent_oName = glcm_summary_stats(k,v,ent_file,'ent',a)
+        ent_files.append(ent_oName)
+        hom_oName = glcm_summary_stats(k,v,hom_file,'hom',a)
+        hom_files.append(hom_oName)
+        var_oName = glcm_summary_stats(k,v,var_file,'var',a)
+        var_files.append(var_oName)
+    del k, v, oName, agg_dist, s_df, g_df, r_df,a,var_oName,hom_oName,ent_oName,ent_file,var_file,hom_file
     
-    merge_dist = pd.concat([df1,pd.concat([df2,df3])])
+    #Merge indivial summary statistics and GLCM distribtuons into a single file
+    merge_glcm_distributions(dist_files,  out_root + os.sep + "merged_GLCM_distributions.csv")
+    merge_summary_stats(ent_files, out_root + os.sep + "merged_entropy_zstats.csv" )    
+    merge_summary_stats(var_files, out_root + os.sep + "merged_variance_zstats.csv" ) 
+    merge_summary_stats(hom_files, out_root + os.sep + "merged_homogeneity_zstats.csv" ) 
+    
+    del dist_files, ent_files, var_files, hom_files
+    
 
-    oName = out_root + os.sep + "merged_aggregraded_distributions_no_outlier.csv.csv"
-    merge_dist = merge_dist[(merge_dist['Entropy']>2.5) & (merge_dist['Variance']<12)&(merge_dist['Entropy']<4.6) ]
-    merge_dist.to_csv(oName,sep=',',index=False)
-    del df1, df2, df3, oName, fnames, merge_dist
 
     
