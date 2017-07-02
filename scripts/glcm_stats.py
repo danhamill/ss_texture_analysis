@@ -113,7 +113,7 @@ if __name__ == '__main__':
     #Get distribtuions and summary statistics for each scan
     for (k,v) in shp_dict.items():
         
-        #Path to textur feature rasters
+        #Path to texture feature rasters
         ent_file = clone_root + os.sep + 'glcm_rasters' + os.sep + k + '_entropy_resampled.tif'
         var_file = clone_root + os.sep + 'glcm_rasters' + os.sep + k + '_var_resampled.tif'
         hom_file = clone_root + os.sep + 'glcm_rasters' + os.sep + k + '_homo_resampled.tif'
