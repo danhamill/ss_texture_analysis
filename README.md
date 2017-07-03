@@ -1,9 +1,9 @@
 ####
 
-Welcome to the repository for GLCM based texture analsis of side scan sonar echograms collected with a recreational-grade system.  
+Welcome to the repository for GLCM based texture analysis of side scan sonar echograms collected with a recreational-grade system.  
 
 #### Contents
-This repostitory contains all of the data and scripts used to prepare the figures in _Alluvial mappint by automated texture segmentation of recreational-grade side scan sonar imagery_ submitted to Environmental Modelling and Sofware. This repository contains a collection of files and scripts required to peform the analysis.  
+This repository contains all of the data and scripts used to prepare the figures in _Alluvial mapping by automated texture segmentation of recreational-grade side scan sonar imagery_ submitted to Environmental Modelling and Sofware. This repository contains a collection of files and scripts required to perform the analysis.  
 
 #### Organization
 
@@ -31,21 +31,21 @@ All of the scripts were developed using python 2.7.11 in a windows 10 enviroment
 
 
 #### Workflow
-All of the continious side scan sonar recordings were processed using [PyHum](https://github.com/dbuscombe-usgs/PyHum).  In the interest of space, I have not included any of the binary side scan sonar files, intermediate PyHum files, or georeferenced point clouds.  If any of those files are of interest, please contact me and I will provided them outside of this repository. 
+All of the continuous side scan sonar recordings were processed using [PyHum](https://github.com/dbuscombe-usgs/PyHum).  In the interest of space, I have not included any of the binary side scan sonar files, intermediate PyHum files, or georeferenced point clouds.  If any of those files are of interest, please contact me and I will provide them outside of this repository. 
 
-To start, I reccomentd cloning this repository to `c:\workspace`.  If you want to clone the repository to a differnet directory, there is a variable `clone_root` at the begining of each python script where you can indicate where the appropriate directory.
+To start, I recommend cloning this repository to `c:\workspace`.  If you want to clone the repository to a different directory, there is a variable `clone_root` at the beginning of each python script where you can indicate where the appropriate directory.
 
-Begining with the side scan sonar echogram rasters in `/ss_rasters/`, you will first need to calculate GLCM texture features using `/scripts/GLCM_calc.py`.  This script will produce georeferenced GLCM texture features in the directory `/output/glcm_rasters/`. 
+Beginning with the side scan sonar echogram rasters in `/ss_rasters/`, you will first need to calculate GLCM texture features using `/scripts/GLCM_calc.py`.  This script will produce georeferenced GLCM texture features in the directory `/output/glcm_rasters/`. 
 
 ```
 python glcm_calc.py
 ```
-Next you will have to use the shapefiles provided in `/shapefiles/` to calculate sediment type statistics.  Aggregraded distibutions and summary statistic CSV file will be save to `/glcm_stats/`.
+Next, you will have to use the shapefiles provided in `/shapefiles/` to calculate sediment type statistics.  Aggregated distributions and summary statistic CSVs will be saved to `/glcm_stats/`.
 
 ```
 python glcm_stats.py
 ```
-The statistics saved in `/glcm_stats/` are used to calibrate all of the automated texture segmentaion algorithims.  All of the sediment classification rasters will be output to `/sedclass_rasters/`.  There are individual python scripts for each of the texture segmentation methods in scipts.  
+The statistics saved in `/glcm_stats/` are used to calibrate all of the automated texture segmentation algorithms.  All of the sediment classification rasters will be output to `/sedclass_rasters/`.  There are individual python scripts for each of the texture segmentation methods in scripts.  
 
 ```
 python LSQ.py
