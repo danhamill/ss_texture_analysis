@@ -8,9 +8,8 @@ Created on Mon Jul 03 07:18:29 2017
 from __future__ import division
 import numpy as np
 from sklearn import mixture
-from sklearn import cross_validation
-from sklearn.metrics import classification_report, confusion_matrix, cohen_kappa_score
-from sklearn import preprocessing
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split
 import pandas as pd
 import os
 from osgeo import gdal,ogr,osr
@@ -99,12 +98,8 @@ if __name__ =='__main__':
     
     standardize = 0
     
-    # split into 50% training, 50% testing
-    if standardize==1: # standardize data
-       X_train, X_test, y_train, y_test = cross_validation.train_test_split(preprocessing.scale(tmp_df['Entropy'].values), tmp_df['sedclass'].values, test_size=0.5, random_state=0)
-       tmp_df['Entropy'] =preprocessing.scale(tmp_df['Entropy'].values)
-    else:
-       X_train, X_test, y_train, y_test = cross_validation.train_test_split(tmp_df['Entropy'].values, tmp_df['sedclass'].values, test_size=0.5, random_state=0)
+
+    X_train, X_test, y_train, y_test = train_test_split(tmp_df['Entropy'].values, tmp_df['sedclass'].values, test_size=0.5, random_state=0)
     
     #initialize the GMM with means
     g = mixture.GaussianMixture(n_components=2, max_iter=100, random_state=0, covariance_type='tied')
@@ -113,17 +108,7 @@ if __name__ =='__main__':
     
     # fit the model
     g.fit(np.expand_dims(X_train, axis=1) )
-    
-     
-    #make sure the means are in order
-    order = np.argsort(np.squeeze(g.means_))
-    g.means_ = g.means_[order]
-    try:
-       g.covariances_ = g.covariances_[order]
-    except:
-       pass
-    g.weights_ = g.weights_[order]
-    
+
     
     bic = g.bic(np.expand_dims(X_train, axis=1) )
     # test
@@ -134,10 +119,11 @@ if __name__ =='__main__':
     print "======================================="
     print "test scores: Entropy"
     print test_accuracy
-    
+    print 'Classification Report:'
     print(classification_report(y_test_pred.ravel(), y_test.ravel()))
-    print (cohen_kappa_score(y_test_pred.ravel(), y_test.ravel()))
-    
+
+    print "======================================="
+    print "Normalized Confusion Matrix:"    
     # show normalized confusion matrix
     cm = confusion_matrix(y_test.ravel(), y_test_pred.ravel())
     cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
@@ -165,7 +151,7 @@ if __name__ =='__main__':
         sed_class = np.reshape(sed_class,np.shape(read_raster(ent_raster)[0]))
         sed_class[read_raster(ent_raster)[0]==-99]=np.nan
         
-        outFile = out_root + os.sep + str(key) + '_GMM_2class_raster.tif'
+        outFile = out_root + os.sep + str(key) + '_GMM2_sedclass.tif'
     
         CreateRaster(sed_class,gt,outFile)
         
