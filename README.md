@@ -52,4 +52,3 @@ python LSQ.py
 python gmm2.py
 python gmm4.py
 ```
-
