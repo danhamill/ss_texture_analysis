@@ -37,17 +37,17 @@ To start, I reccomentd cloning this repository to `c:\workspace`.  If you want t
 
 Begining with the side scan sonar echogram rasters in `/ss_rasters/`, you will first need to calculate GLCM texture features using `/scripts/GLCM_calc.py`.  This script will produce georeferenced GLCM texture features in the directory `/output/glcm_rasters/`. 
 
-```python
+```
 python glcm_calc.py
 ```
 Next you will have to use the shapefiles provided in `/shapefiles/` to calculate sediment type statistics.  Aggregraded distibutions and summary statistic CSV file will be save to `/glcm_stats/`.
 
-```python
+```
 python glcm_stats.py
 ```
 The statistics saved in `/glcm_stats/` are used to calibrate all of the automated texture segmentaion algorithims.  All of the sediment classification rasters will be output to `/sedclass_rasters/`.  There are individual python scripts for each of the texture segmentation methods in scipts.  
 
-```python
+```
 python LSQ.py
 python gmm2.py
 python gmm4.py
